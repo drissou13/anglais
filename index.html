@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Jeu — Verbes irréguliers (source: verbesirreguliersanglais.com)</title>
+  <style>
+    :root{--bg:#f4f4f9; --card:#fff; --ok:#d1fae5; --bad:#fee2e2; --accent:#2563eb}
+    *{box-sizing:border-box}
+    body{font-family:Inter, Arial, sans-serif; margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; background:var(--bg); transition:background 360ms}
+    .wrap{width:100%; max-width:720px; padding:20px}
+    .card{background:var(--card); border-radius:12px; padding:20px; box-shadow:0 6px 24px rgba(16,24,40,0.08)}
+    header{display:flex; align-items:center; justify-content:space-between; gap:12px}
+    h1{margin:0; font-size:18px}
+    .game{display:grid; grid-template-columns:1fr 220px; gap:16px; margin-top:14px}
+    .panel{padding:12px}
+    .inf{font-size:40px; font-weight:700; text-align:center}
+    input{width:100%; padding:10px 12px; font-size:16px; margin-top:8px; border-radius:8px; border:1px solid #e6eef8}
+    .btn{padding:10px 12px; border-radius:8px; border:none; cursor:pointer; background:var(--accent); color:#fff; margin-top:10px}
+    .small{font-size:13px; color:#6b7280}
+    .stats{display:flex; flex-direction:column; gap:8px}
+    .stat{background:#f8fafc; padding:8px; border-radius:8px; text-align:center}
+    .history{max-height:300px; overflow:auto; margin-top:8px}
+    .row{display:flex; gap:8px}
+    @media (max-width:760px){.game{grid-template-columns:1fr;}.panel.right{order:2}}
+  </style>
+</head>
+<body>
+  <div class="wrap card">
+    <header>
+      <div>
+        <h1>Jeu — verbes irréguliers (source: verbesirreguliersanglais.com)</h1>
+        <div class="small">Complète le Past Simple et le Past Participle. L'interface s'illumine vert/rouge selon ta réponse.</div>
+      </div>
+      <div class="small">Toutes les formes proviennent du site indiqué.</div>
+    </header>
+
+    <div class="game">
+      <div class="panel left card">
+        <div class="inf" id="infinitive">—</div>
+
+        <input id="ps" placeholder="Past Simple (ex: went)" autocomplete="off" />
+        <input id="pp" placeholder="Past Participle (ex: gone)" autocomplete="off" />
+
+        <div class="row">
+          <button class="btn" id="checkBtn">Vérifier</button>
+          <button class="btn" id="nextBtn" style="background:#6b7280">Passer</button>
+        </div>
+
+        <div id="result" class="small" style="margin-top:10px"></div>
+
+        <div class="card" style="margin-top:12px; padding:10px">
+          <div class="small">Historique</div>
+          <div id="history" class="history"></div>
+        </div>
+      </div>
+
+      <aside class="panel right card">
+        <div class="stats">
+          <div class="stat"><div class="small">Score</div><div id="score">0</div></div>
+          <div class="stat"><div class="small">Corrects</div><div id="correct">0</div></div>
+          <div class="stat"><div class="small">Tentatives</div><div id="attempts">0</div></div>
+          <div class="stat"><div class="small">Taux</div><div id="rate">0%</div></div>
+        </div>
+        <div style="margin-top:12px" class="small">Tu peux aussi appuyer sur Entrée pour vérifier.</div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    // Liste de verbes tirée du site https://verbesirreguliersanglais.com/
+    // (Base, Prétérit, Participe passé)
+    const VERBS = [
+["abide","abode","abode"],["arise","arose","arisen"],["awake","awoke","awoken"],["be","was/were","been"],["bear","bore","borne"],["beat","beat","beaten"],["become","became","become"],["beget","begat","begotten"],["begin","began","begun"],["bend","bent","bent"],["bet","bet","bet"],["bid","bid","bidden"],["bite","bit","bitten"],["bleed","bled","bled"],["blow","blew","blown"],["break","broke","broken"],["breed","bred","bred"],["bring","brought","brought"],["broadcast","broadcast","broadcast"],["build","built","built"],["burn","burnt","burnt"],["burst","burst","burst"],["buy","bought","bought"],["catch","caught","caught"],["choose","chose","chosen"],["cling","clung","clung"],["clothe","clad","clad"],["come","came","come"],["cost","cost","cost"],["creep","crept","crept"],["cut","cut","cut"],["deal","dealt","dealt"],["dig","dug","dug"],["dive","dove","dived"],["do","did","done"],["draw","drew","drawn"],["dream","dreamt","dreamt"],["drink","drank","drunk"],["drive","drove","driven"],["eat","ate","eaten"],["fall","fell","fallen"],["feed","fed","fed"],["feel","felt","felt"],["fight","fought","fought"],["find","found","found"],["flee","fled","fled"],["fling","flung","flung"],["fly","flew","flown"],["forbid","forbade","forbidden"],["forecast","forecast","forecast"],["foresee","foresaw","foreseen"],["forget","forgot","forgotten"],["forgive","forgave","forgiven"],["forsake","forsook","forsaken"],["freeze","froze","frozen"],["get","got","gotten"],["give","gave","given"],["go","went","gone"],["grind","ground","ground"],["grow","grew","grown"],["hang","hung","hung"],["have","had","had"],["hear","heard","heard"],["hide","hid","hidden"],["hit","hit","hit"],["hold","held","held"],["hurt","hurt","hurt"],["keep","kept","kept"],["kneel","knelt","knelt"],["know","knew","known"],["lay","laid","laid"],["lead","led","led"],["lean","leant","leant"],["leap","leapt","leapt"],["learn","learnt","learnt"],["leave","left","left"],["lend","lent","lent"],["let","let","let"],["lie","lay","lain"],["light","lit","lit"],["lose","lost","lost"],["make","made","made"],["mean","meant","meant"],["meet","met","met"],["mow","mowed","mown"],["overcome","overcame","overcome"],["pay","paid","paid"],["put","put","put"],["quit","quit","quit"],["read","read","read"],["ride","rode","ridden"],["ring","rang","rung"],["rise","rose","risen"],["run","ran","run"],["say","said","said"],["see","saw","seen"],["seek","sought","sought"],["sell","sold","sold"],["send","sent","sent"],["set","set","set"],["shake","shook","shaken"],["shear","sheared","shorn"],["shed","shed","shed"],["shine","shone","shone"],["shoot","shot","shot"],["show","showed","shown"],["shut","shut","shut"],["sing","sang","sung"],["sink","sank","sunk"],["sit","sat","sat"],["sleep","slept","slept"],["slide","slid","slid"],["sling","slung","slung"],["slink","slunk","slunk"],["slit","slit","slit"],["smell","smelt","smelt"],["sow","sowed","sown"],["speak","spoke","spoken"],["speed","sped","sped"],["spell","spelt","spelt"],["spend","spent","spent"],["spill","spilt","spilt"],["spin","spun","spun"],["spit","spat","spat"],["split","split","split"],["spoil","spoilt","spoilt"],["spread","spread","spread"],["spring","sprang","sprung"],["stand","stood","stood"],["steal","stole","stolen"],["stick","stuck","stuck"],["sting","stung","stung"],["stink","stank","stunk"],["stride","strode","stridden"],["strike","struck","struck"],["string","strung","strung"],["strive","strove","striven"],["swear","swore","sworn"],["sweep","swept","swept"],["swell","swelled","swollen"],["swim","swam","swum"],["swing","swung","swung"],["take","took","taken"],["teach","taught","taught"],["tear","tore","torn"],["tell","told","told"],["think","thought","thought"],["throw","threw","thrown"],["understand","understood","understood"],["wake","woke","woken"],["wear","wore","worn"],["weep","wept","wept"],["wet","wet","wet"],["win","won","won"],["wind","wound","wound"],["withdraw","withdrew","withdrawn"],["write","wrote","written"]
+    ];
+
+    // state
+    let state = {current:null,score:0,attempts:0,correct:0};
+
+    // elements
+    const infEl = document.getElementById('infinitive');
+    const psEl = document.getElementById('ps');
+    const ppEl = document.getElementById('pp');
+    const resultEl = document.getElementById('result');
+    const historyEl = document.getElementById('history');
+    const scoreEl = document.getElementById('score');
+    const attemptsEl = document.getElementById('attempts');
+    const correctEl = document.getElementById('correct');
+    const rateEl = document.getElementById('rate');
+
+    function pickRandom(){
+      const v = VERBS[Math.floor(Math.random()*VERBS.length)];
+      state.current = v;
+      infEl.textContent = v[0];
+      psEl.value = '';
+      ppEl.value = '';
+      resultEl.textContent = '';
+      removeFlash();
+      psEl.focus();
+    }
+
+    function normalize(s){return s.trim().toLowerCase();}
+
+    function isMatch(user,correct){
+      if(!user) return false;
+      const parts = correct.split(/[,\/]/).map(x=>x.trim().toLowerCase());
+      return parts.includes(user.trim().toLowerCase());
+    }
+
+    function check(){
+      const userPS = normalize(psEl.value);
+      const userPP = normalize(ppEl.value);
+      const corrPS = state.current[1];
+      const corrPP = state.current[2];
+
+      state.attempts++;
+      const psOk = isMatch(userPS,corrPS);
+      const ppOk = isMatch(userPP,corrPP);
+
+      if(psOk && ppOk){
+        state.score += 10; state.correct++;
+        flash(true);
+        addHistory(true);
+        resultEl.textContent = '✅ Correct — +10 points';
+        updateStats();
+        setTimeout(pickRandom,900);
+      } else {
+        state.score = Math.max(0,state.score-2);
+        flash(false);
+        addHistory(false, userPS, userPP);
+        resultEl.textContent = `❌ Mauvais — Réponse: ${corrPS} / ${corrPP}`;
+        updateStats();
+      }
+    }
+
+    function addHistory(ok, u1='', u2=''){
+      const div = document.createElement('div');
+      div.style.padding='8px'; div.style.borderRadius='6px'; div.style.marginBottom='6px';
+      if(ok){ div.style.background='#ecfdf5'; div.textContent = `${state.current[0]} — Correct`; }
+      else { div.style.background='#fff1f2'; div.textContent = `${state.current[0]} — Ton essai: ${u1 || '-'} / ${u2 || '-'} — Correct: ${state.current[1]} / ${state.current[2]}`; }
+      historyEl.prepend(div);
+    }
+
+    let flashTimeout = null;
+    function flash(ok){
+      clearTimeout(flashTimeout);
+      if(ok){ document.body.style.background = 'var(--ok)'; }
+      else { document.body.style.background = 'var(--bad)'; }
+      flashTimeout = setTimeout(removeFlash, 900);
+    }
+    function removeFlash(){ document.body.style.background = 'var(--bg)'; }
+
+    function updateStats(){ scoreEl.textContent = state.score; attemptsEl.textContent = state.attempts; correctEl.textContent = state.correct; rateEl.textContent = state.attempts? Math.round(state.correct/state.attempts*100)+'%':'0%'; }
+
+    document.getElementById('checkBtn').addEventListener('click', check);
+    document.getElementById('nextBtn').addEventListener('click', pickRandom);
+    window.addEventListener('keydown', e=>{ if(e.key==='Enter') check(); });
+
+    // démarrage
+    pickRandom();
+  </script>
+</body>
+</html>
